@@ -1,89 +1,91 @@
 # 🎧 Artist Touring Analytics Platform
 
-A modular pipeline and analytics tool for collecting and exploring global artist touring data. It brings together multiple event sources into a consistent, structured format to surface patterns in performance history, geography, and scheduling.
+A modular data infrastructure and analytics layer for understanding artist touring behavior across multiple public event sources. Designed to surface high-signal patterns in where, when, and how artists perform — with outputs that can drive internal tools, feature discovery, and machine learning workflows.
 
 ---
 
-## Overview
+## Context
 
-The system enables:
+Live event data carries unique information: it captures momentum, geographic reach, and frequency that aren’t always visible in stream counts. But this data is fragmented, inconsistently structured, and not directly usable by downstream systems.
 
-- Aggregation of artist tour data across multiple public platforms
-- Resolution of location, venue, and event information into a unified schema
-- Interactive visual analysis and exportable insights
-- A lightweight but extensible foundation for downstream workflows and experimentation
+This platform addresses that gap — by consolidating structured signals from disparate sources into a clean, queryable, and interpretable format.
 
 ---
 
-## Architecture
+## Capabilities
 
-### 1. **Data Ingestion**
-
-Scrapers gather live performance data using headless browsers and traditional requests from:
-
-- `songkick.py`: Historical and upcoming concerts
-- `residentadvisor.py`: Club events
-- `edmtrain.py`: U.S. electronic music events
-- `concertarchives.py`: Fan-reported past shows
-
-Each module outputs consistent structured records with fields like:
-
-```text
-artist, date, venue, city, country, region, url, type, source
-````
+- Multi-source scraping across **Songkick**, **Resident Advisor**, **EDMTrain**, and **Concert Archives**
+- Unified schema:  
+  `artist, date, venue, city, country, region, url, source, type`
+- Normalized storage in **SQLite**, with outputs to **CSV** for portability
+- An interactive **Streamlit** dashboard for filtering, metrics, and insights
+- Designed to support ML feature generation, entity resolution, and content enrichment
 
 ---
 
-### 2. **Storage & Modeling**
+## System Architecture
 
-Event records are stored in a **SQLite** database and/or exported to **CSV**. The data structure supports easy joining, filtering, and transformation — designed for reuse across different analysis or labeling pipelines.
+### 🧱 Data Layer
+
+- Asynchronous and synchronous scraping using `Playwright`, `requests`, `BeautifulSoup`
+- Parsing and cleaning logic designed to standardize unstructured HTML content
+- Built-in de-duplication, URL handling, and minimal geocoding logic
+
+### 🗃️ Storage Layer
+
+- All event records are stored in a local **SQLite** instance
+- Schema optimized for joins, time-series aggregation, and filtering
+- Supports both single-artist and multi-artist pipelines
+
+### 📊 Visualization Layer
+
+- Streamlit + Plotly dashboard
+- Core filters: artist name, country, year
+- Metrics: top venues, top cities, most active years, touring growth, weekday distributions
+- Export: filtered CSVs with schema-aligned records for reuse in external systems
 
 ---
 
-### 3. **Visualization Dashboard**
+## ML & Platform Use Cases
 
-Built using **Streamlit** and **Plotly**, the dashboard allows for:
+This platform provides input data suitable for:
 
-* Filtering by year, country, and artist
-* Visualizing top venues, cities, and performance frequency
-* Identifying seasonal or regional touring trends
-* Exporting data for further use
+- **Entity resolution**: resolving venues, artist aliases, and multi-platform IDs  
+- **Supervised labeling**: training ML models to predict event-level metadata (e.g. live vs. studio, region trends)  
+- **Temporal modeling**: extracting features for models that care about frequency, spacing, or peak activity  
+- **Graph enrichment**: adding real-world context to internal content graphs (artists ↔ venues ↔ places ↔ time)
+
+The goal is not just to visualize, but to **generate high-quality, ML-ready signals** from public data with minimal human intervention.
 
 ---
 
-## Development Approach
+## Iteration Model
 
-This system was developed with:
+Each module was built following a tight experimentation loop:
 
-* A focus on **product discovery** through iterative insight generation
-* Clean data modeling for interpretability and reuse
-* Lightweight tooling that enables **fast experimentation**
-* Built-in support for metrics-driven workflows (e.g., active years, tour density, location spread)
+1. **Scrape + Normalize**: extract from source, align to internal schema
+2. **Visualize + Measure**: surface aggregate patterns, flag inconsistencies
+3. **Export + Apply**: move data into modeling pipelines or internal prototypes
+
+This supports lightweight product discovery cycles and rapid validation of new data use cases.
 
 ---
 
 ## Technical Stack
 
-* **Data collection**: Playwright (async + sync), BeautifulSoup, requests
-* **Processing**: pandas, re, datetime
-* **Storage**: SQLite, CSV
-* **UI & Visualization**: Streamlit, Plotly
+| Layer          | Tools/Libs                                 |
+|----------------|---------------------------------------------|
+| Collection     | `Playwright`, `requests`, `BeautifulSoup`, `asyncio` |
+| Processing     | `pandas`, `re`, `datetime`, CSV I/O         |
+| Storage        | `sqlite3`, schema normalization             |
+| Visualization  | `Streamlit`, `Plotly`, caching optimizations|
 
 ---
 
-## Sample Use Cases
-
-* Understand where and when an artist performs most frequently
-* Track touring momentum over time
-* Identify high-density venues and cities
-* Build labeled datasets for internal tools or systems
-
----
-
-## Run the Project
+## Running the Project
 
 ```bash
-# Scrape data from sources
+# Scrape artist data
 python songkick.py
 python residentadvisor.py
 python edmtrain.py
@@ -91,14 +93,3 @@ python concertarchives.py
 
 # Launch dashboard
 streamlit run dashboard.py
-```
-
----
-
-## Design Philosophy
-
-Organizing and connecting content data — across time, place, and platform — can reveal new opportunities for discovery, association, and context. This project serves as a lightweight framework for doing exactly that in a space where structured insight is often locked inside unstructured sources.
-
-```
-
----
